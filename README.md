@@ -13,7 +13,7 @@ It's a static site in `public/`, with no build step needed.
 - Spravato / Deep TMS interest card, Explore, treatment pages, and discovery-call booking.
 - Session Mode: live 2-hour countdown, playlists, Now Playing, a volume cap (60%), a sleep timer, guided breathing (box, 4-7-8, coherent), and a **Relax & disconnect** card and screen (airplane mode / Do Not Disturb, eyes closed, just listen; Curated provides eye masks and headphones) with a one-tap session playlist and a "before you disconnect" checklist. There is no reading during Session Mode.
 - A pre-visit guide ("What to expect at session 6") is reachable from Home as education before the visit.
-- Journal: mood and feelings entries saved to `localStorage` on the device, quick one-tap mood, a thought record, and insights.
+- Journal: mood and feelings entries saved privately to `localStorage` on the device, quick one-tap mood, a thought record, and insights. There is no option to send or share entries with the provider or care team; the entry, insights and history screens show a gentle note: "Feel free to share this information with your provider at your next session."
 - Safety plan and crisis boxes show only emergency lines: Call 911 (`tel:911`) and the 988 Suicide & Crisis Lifeline (`tel:988`, `sms:988`). The clinic number is not shown in any emergency box.
 - Forms, messages, billing (with the ride reminder), profile, and telehealth.
 - Spotify, YouTube Music and Apple Music show "Coming soon" (not connected).

@@ -384,9 +384,8 @@ function setMood(pg,i){ const labs=MOODS.map(m=>textEls(pg,m)[0]).filter(Boolean
   on('entry','Speak',soon('Voice dictation'),{mode:'has'});
   on('entry','#j-crisis',()=>go('safety'));
   const save=()=>{ const text=ta.value.trim(); if(ent.mood<0&&!ent.core&&!text){toast('Pick a mood, a feeling, or write a few words first.');return;}
-    const tg=$('.toggle',pg); const shared=tg&&!tg.classList.contains('off');
-    const list=loadJ(); list.unshift({ts:Date.now(),mood:ent.mood,core:ent.core,subs:ent.subs,energy:Math.round(ent.en),sleep:Math.round(ent.sl),text,shared}); localStorage.setItem(JKEY,JSON.stringify(list.slice(0,50)));
-    resetEntry(); go('jhome',{replace:true}); toast(shared?'Entry saved · <b>shared with your care team</b> (demo)':'Entry saved <b>privately</b> on this device');};
+    const list=loadJ(); list.unshift({ts:Date.now(),mood:ent.mood,core:ent.core,subs:ent.subs,energy:Math.round(ent.en),sleep:Math.round(ent.sl),text,shared:false}); localStorage.setItem(JKEY,JSON.stringify(list.slice(0,50)));
+    resetEntry(); go('jhome',{replace:true}); toast('Entry saved <b>privately</b> on this device · feel free to share it with your provider at your next session.',3800);};
   on('entry','Save entry',save); on('entry','Save',save,{i:0});
   function resetEntry(){ent={mood:-1,core:null,subs:[],en:28,sl:35,text:''}; ta.value=''; setMood(pg,-1); $$('.core[data-c]',pg).forEach(c=>{const col=FEEL[c.dataset.c][0]; c.style.background='#fff'; c.style.color='#4A5168'; c.style.borderColor='#ECE6DD'; if(c.firstElementChild) c.firstElementChild.style.background=col;}); renderSubs();}
   onShow.entry=()=>{ if(presetMood>=0){ent.mood=presetMood; setMood(pg,presetMood); presetMood=-1;} const d=new Date(); const sub=$('.navbar',pg)&&textEls($('.navbar',pg),'Oct 26','has')[0]; if(sub) sub.textContent=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); };
@@ -405,12 +404,11 @@ function setMood(pg,i){ const labs=MOODS.map(m=>textEls(pg,m)[0]).filter(Boolean
     loadJ().slice(0,5).reverse().forEach(e=>{const d=new Date(e.ts); const li=document.createElement('div'); li.className='li tap'; li.dataset.saved='1';
       const feel=[e.core,...(e.subs||[])].filter(Boolean).map(s=>s.toLowerCase()).join(', ');
       const title=e.text?esc(e.text.split('\n')[0].slice(0,34))+(e.text.length>34?'…':''):(e.core?e.core+' check-in':'Mood check-in');
-      li.innerHTML='<div class="ibox" style="background:#F0EDFF;color:#6B5BD6">'+svgOf('pen',18,'#6B5BD6')+'</div><div class="tx"><div class="t1" style="font-size:14.5px">'+title+'</div><div class="t2">'+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+(e.mood>=0?MOODS[e.mood]:'—')+(feel?' · '+esc(feel):'')+'</div></div>'+(e.shared?'<span class="chip" style="background:#E9FBF4;color:#1F7A55;font-size:11px">Shared</span>':svgOf('lock',15,'#9AA1B4'));
+      li.innerHTML='<div class="ibox" style="background:#F0EDFF;color:#6B5BD6">'+svgOf('pen',18,'#6B5BD6')+'</div><div class="tx"><div class="t1" style="font-size:14.5px">'+title+'</div><div class="t2">'+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+(e.mood>=0?MOODS[e.mood]:'—')+(feel?' · '+esc(feel):'')+'</div></div>'+svgOf('lock',15,'#9AA1B4');
       li.addEventListener('click',ev=>{ev.stopPropagation(); toast(esc(e.text||'No text — mood & feelings only.'),3500);}); list.prepend(li);});};
 })();
 on('thought','#tr-next',()=>toast('Saved to your thought record (demo)'));
 on('thought','Save for later',()=>{go('jhome',{replace:true}); toast('Thought record saved for later (demo)');});
-on('insights','Share a summary with Dr. Marsh',()=>toast('Nothing was shared · sharing is disabled in the prototype.'));
 on('jhome','Speak instead',soon('Voice journaling'));
 on('forms','Start',()=>toast('Form opens here (demo) · answers would sync to your AdvancedMD chart'),{all:true});
 // safety plan + crisis links (real)
