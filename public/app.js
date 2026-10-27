@@ -24,6 +24,7 @@ function go(id,o={}){ if(cur&&cur.dataset.id===id&&!o.replace) return;
 function back(){ if(depth>0) history.back(); else go(signed()?'home':'welcome',{replace:true}); }
 window.addEventListener('popstate',e=>{const s=e.state; if(s&&s.id){depth=s.depth||0; show(s.id,true);} else {depth=0; show(signed()?'home':'welcome');}});
 window.__go=go;
+window.__audioState=()=>({playing,paused:media?media.paused:null,src:media?media.src:null,time:media?media.currentTime:0,ctx:ctx?ctx.state:null});
 
 /* ---------- toast ---------- */
 let tt; function toast(h,ms=2600){const t=$('#toast'); t.innerHTML=h; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),ms);}
@@ -171,9 +172,21 @@ function tick(){
 }
 setInterval(tick,1000);
 on('session','#tmusic',()=>go('playlists'));
-on('session','Read',()=>go('reading'));
 on('session','Breathe',()=>go('breathe'));
 on('session','Intention',()=>toast('Your intention: <b>“I am open &amp; calm.”</b>'));
+/* relax & disconnect */
+const rcState={hp:false,mask:false,music:false,air:false};
+function relaxUI(){
+  $$('.rpl').forEach(x=>x.textContent=playing?'Pause music':'Start session playlist');
+  ['#relaxplay','#relaxplay2'].forEach(q=>{const b=$(q); if(b) setIcon(b,playing?'pause':'play');});
+  const ms=$('#tmusicsub'); if(ms) ms.textContent=playing?'Playing · '+TRACKS[cT].pl:'Tap to choose';
+  if(playing) rcState.music=true;
+  $$('#relaxcheck .rc').forEach(r=>{const on=rcState[r.dataset.k], c=$('.rcb',r); c.style.background=on?'#55E3FF':'transparent'; c.style.borderColor=on?'#55E3FF':'rgba(255,255,255,.35)'; c.innerHTML=on?svgOf('check',15,'#091F58'):''; r.lastElementChild.style.color=on?'#fff':'rgba(255,255,255,.8)';});
+}
+const relaxPlay=()=>{ if(playing){pauseAll();} else {playTrack(0); toast('Music started · you can switch to <b>airplane mode</b> now. It keeps playing offline.',3600);} };
+on('session','#relaxplay',relaxPlay); on('session','#relaxmore',()=>go('relax'));
+on('relax','#relaxplay2',relaxPlay); on('relax','#relaxnp',()=>go('nowplaying'));
+$$('#relaxcheck .rc').forEach(r=>bindEl(r,()=>{const k=r.dataset.k; if(k==='music'){ if(!playing) playTrack(0); rcState.music=true; } else rcState[k]=!rcState[k]; relaxUI();}));
 on('session','Need help? Alert staff',()=>toast('<b>Nurse station notified</b> (demo). Someone will be with you shortly.',3500),{mode:'has'});
 
 /* ---------- audio ---------- */
@@ -215,6 +228,7 @@ function audioUI(){
   if(np){ if(npTitle) npTitle.textContent=t.name; if(npSub) npSub.textContent=t.pl+' · '+t.sub; if(npChip) npChip.textContent=t.chip; if(npBtn) setIcon(npBtn,playing?'pause':'play'); }
   if(pl){ if(miniTitle) miniTitle.textContent=t.name; if(miniSub) miniSub.textContent=t.pl+' · Offline · '+(cT+1)+' of 5'; if(miniBtn) setIcon(miniBtn,playing?'pause':'play'); const jp=$('#jplay',pl); if(jp) setIcon(jp,playing?'pause':'play');
     $$('[data-row]',pl).forEach(r=>{const s=$('span',r); if(s) s.style.color=Number(r.dataset.row)===cT&&playing?'#55E3FF':'#fff';}); }
+  if(typeof relaxUI==='function') try{relaxUI();}catch(e){}
   const o1=np&&$('#o1',np); if(o1) o1.style.animation=playing?'cpulse 6s ease-in-out infinite':'none';
 }
 let npTitle,npSub,npChip,npBtn,miniTitle,miniSub,miniBtn,miniBar,miniL,miniR;
@@ -263,12 +277,9 @@ function progTick(){ if(!miniBar) return; let p=0,a=0,d=0;
   if(TRACKS[cT].src&&media&&media.duration){a=media.currentTime; d=media.duration;} else if(synth&&ctx){d=TRACKS[cT].synth==='deep'?45*60:35*60; a=(ctx.currentTime-synthStart)%d;}
   if(d){p=a/d; miniBar.style.width=(p*100).toFixed(1)+'%'; const m=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); if(miniL) miniL.textContent=m(a); if(miniR) miniR.textContent='-'+m(d-a);} }
 
-/* ---------- reading ---------- */
-on('reading','.glass',()=>go('reader'),{all:true});
-on('reading','Listen instead',soon('Audio narration'),{mode:'has'});
-const rc=P('reading')&&textEls(P('reading'),'All guides')[0]; if(rc){pickGroup([...rc.parentElement.children],it=>/background:#fff/.test(it.getAttribute('style')||''));}
+/* ---------- pre-visit guide (education only; no reading during Session Mode) ---------- */
 on('reader','Try breathing',()=>go('breathe'),{mode:'has'});
-on('reader','Next guide',()=>{toast('Next guide · <b>Setting your intention</b> (demo uses the same text)'); P('reader').querySelector('.content').scrollTop=0;},{mode:'has'});
+on('reader','Next guide',()=>{toast('Next guide · <b>Setting your intention</b> (pre-visit · demo uses the same text)'); P('reader').querySelector('.content').scrollTop=0;},{mode:'has'});
 on('reader','Aa',()=>{const c=$('.content',P('reader')); c.dataset.big=c.dataset.big==='1'?'0':'1'; $$('p',c).forEach(p=>p.style.fontSize=c.dataset.big==='1'?'19.5px':'17px');});
 (function(){const pg=P('reader'); if(!pg) return; const c=$('.content',pg), bar=$('[style*="top:54px"] > div',pg); if(bar){const par=bar.parentElement; par.style.top='var(--st)';} const nb=$('.navbar',pg); if(nb) nb.style.top='calc(var(--st) + 4px)'; c.style.top='calc(var(--st) + 58px)';
   c.addEventListener('scroll',()=>{if(bar) bar.style.width=Math.min(100,(c.scrollTop/(c.scrollHeight-c.clientHeight))*100||0)+'%';});})();
@@ -340,7 +351,6 @@ on('profile','Privacy & security',()=>{if(confirm('Sign out of the prototype?'))
 on('checkin','Start Session Mode',()=>go('session'));
 on('careplan','Refill',()=>toast('Refill request sent to Neighborhood Pharmacy (demo · nothing was sent)'));
 on('billing','Card / HSA',()=>toast('Payments are disabled in this prototype.'));
-on('safety','Message my care team',()=>go('messages'));
 on('tele','Join visit',()=>toast('Demo · video visits would open AdvancedMD Telemedicine.'));
 
 /* ---------- journal ---------- */
@@ -405,11 +415,12 @@ on('jhome','Speak instead',soon('Voice journaling'));
 on('forms','Start',()=>toast('Form opens here (demo) · answers would sync to your AdvancedMD chart'),{all:true});
 // safety plan + crisis links (real)
 $$('.pg').forEach(pg=>{
-  textEls(pg,'988','has').forEach(el=>{const b=box(el); if(b.classList.contains('tap')||b.closest('a')) return; const t=norm(b.textContent);
+  textEls(pg,'988','has').forEach(el=>{const b=box(el); if(b.classList.contains('tap')||b.closest('a')||el.closest('a')) return; const t=norm(b.textContent);
     if(/text/i.test(t)&&!/call/i.test(t)) bindEl(b,()=>{location.href='sms:988';}); else bindEl(b,()=>tel('988'));});
-  textEls(pg,'741741','has').forEach(el=>{const b=box(el); if(!b.classList.contains('tap')) bindEl(b,()=>{location.href='sms:741741?body=HOME';});});
-  textEls(pg,'911','has').forEach(el=>{const b=box(el); if(!b.classList.contains('tap')) bindEl(b,()=>tel('911'));});
+  textEls(pg,'911','has').forEach(el=>{const b=box(el); if(b.classList.contains('tap')||b.closest('a')||el.closest('a')) return; bindEl(b,()=>tel('911'));});
 });
+
+$$('a[href^="tel:"],a[href^="sms:"]').forEach(a=>a.classList.add('tap'));
 
 /* ---------- boot ---------- */
 const h0=location.hash.slice(1);

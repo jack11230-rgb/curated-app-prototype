@@ -6,7 +6,7 @@ import os; os.chdir(SRC)
 import screens1 as A, screens2 as B, screens3 as C, screens4 as D
 from icons import ic
 S=[('welcome',A.s01),('home',A.s02),('home-asked',lambda:A.s02('asked')),('visits',A.s03),('book',lambda:A.s04('b')),('book-done',lambda:A.s04('c')),
-('session',A.s05),('playlists',B.s06),('nowplaying',B.s06b),('reading',B.s07),('reader',B.s08),('breathe',B.s09),('forms',B.s10),
+('session',A.s05),('playlists',B.s06),('nowplaying',B.s06b),('reader',B.s08),('breathe',B.s09),('forms',B.s10),
 ('messages',C.s11),('billing',C.s12),('profile',C.s13),('checkin',C.s14),('careplan',C.s15),('tele',C.s16),
 ('explore',D.s17),('spravato',D.s18),('tms',D.s18b),('disc',lambda:D.s19('b')),('disc-done',lambda:D.s19('c')),('asked',D.s19b),
 ('jhome',D.s20),('entry',lambda:D.s21('a')),('thought',D.s22),('insights',D.s23),('safety',D.s24)]
